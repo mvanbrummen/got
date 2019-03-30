@@ -4,6 +4,11 @@
 <head>
     <title>GOT</title>
     <link ref="stylesheet" type="text/css" href="static/css/main.css">
+    <style>
+        body {
+            padding: 0 10px 0 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -11,8 +16,7 @@
     <h2>{{$repoName}}</h2>
 
 
-    <p>Commits {{.TotalCommits}}</p>
-    <p>Branches {{.TotalBranches}}</p>
+    <p>Commits <a href="#">{{.TotalCommits}}</a> | Branches <a href="#">{{.TotalBranches}}</a></p>
     <table>
         <thead>
             <tr>
