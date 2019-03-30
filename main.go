@@ -95,6 +95,9 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 			Repository{
 				"go-bencoder2",
 			},
+			Repository{
+				"go-git",
+			},
 		},
 	}
 
