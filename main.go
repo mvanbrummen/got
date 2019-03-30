@@ -106,13 +106,26 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 	repoName := vars["repoName"]
 	fileName := vars["rest"]
 
+	repo, _ := git.PlainOpen(".got/" + repoName + "/.git")
+	ref, _ := repo.Head()
+
+	c, _ := repo.CommitObject(ref.Hash())
+
+	iter, _ := c.Files()
+
+	var contents string
+	iter.ForEach(func(f *object.File) error {
+		if f.Name == fileName {
+			cont, _ := f.Contents()
+			contents = cont
+		}
+		return nil
+	})
+
 	fileDetail := FileDetail{
 		RepoName: repoName,
 		Name:     fileName,
-		Contents: `
-			println("hello world!")
-			exit(0)
-		`,
+		Contents: contents,
 	}
 
 	templates["file.html"].Execute(w, fileDetail)
