@@ -39,6 +39,13 @@ type File struct {
 	Hash string
 }
 
+type FileDetail struct {
+	RepoName string
+	Name     string
+	Contents string
+	Hash     string
+}
+
 func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
@@ -94,6 +101,23 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	templates["index.html"].Execute(w, repos)
 }
 
+func fileHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	repoName := vars["repoName"]
+	fileName := vars["rest"]
+
+	fileDetail := FileDetail{
+		RepoName: repoName,
+		Name:     fileName,
+		Contents: `
+			println("hello world!")
+			exit(0)
+		`,
+	}
+
+	templates["file.html"].Execute(w, fileDetail)
+}
+
 var templates map[string]*template.Template
 
 func init() {
@@ -114,6 +138,7 @@ func main() {
 
 	handler.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
 
+	handler.HandleFunc("/repository/{repoName}/blob/{rest:.*}", fileHandler)
 	handler.HandleFunc("/repository/{repoName}", repositoryHandler)
 	handler.HandleFunc("/", indexHandler)
 
