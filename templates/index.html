@@ -5,10 +5,10 @@
     <title>GOT</title>
     <link ref="stylesheet" type="text/css" href="/static/css/main.css">
     <style>
-            body {
-                padding: 0 10px 0 10px;
-            }
-        </style>
+        body {
+            padding: 0 10px 0 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -22,9 +22,9 @@
         </thead>
         <tbody>
             {{ range .Repositories }}
-                <tr>
-                    <td><a href="repository/{{ .Name }}">{{ .Name }}</a></td>
-                </tr>
+            <tr>
+                <td><a href="repository/{{ .Name }}">{{ .Name }}</a></td>
+            </tr>
             {{ end }}
 
         </tbody>
