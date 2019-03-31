@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>GOT</title>
+    <title>.got</title>
     <link ref="stylesheet" type="text/css" href="static/css/main.css">
     <style>
         body {
@@ -17,7 +17,7 @@
 
 <body>
     {{$repoName := .Name }}
-    <h2><a href="/repository/{{$repoName}}">{{$repoName}}</a></h2>
+    <h2><a href="/">.got</a>/<a href="/">repositories</a>/<a href="/repository/{{$repoName}}">{{$repoName}}</a></h2>
 
 
     <p>Commits <a href="#">{{.TotalCommits}}</a> | Branches <a href="#">{{.TotalBranches}}</a></p>
