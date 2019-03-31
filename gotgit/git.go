@@ -29,6 +29,43 @@ func TotalBranches(repo *git.Repository) (int, error) {
 	return totalBranches, nil
 }
 
+// Commits returns all commits for a repo
+func Commits(repo *git.Repository) ([]model.Commit, error) {
+	ref, err := repo.Head()
+	if err != nil {
+		return nil, err
+	}
+
+	cIter, err := repo.Log(&git.LogOptions{From: ref.Hash()})
+	if err != nil {
+		return nil, err
+	}
+
+	commits := make([]model.Commit, 0)
+	cIter.ForEach(func(c *object.Commit) error {
+		parentHashes := make([]string, 0)
+		for _, ph := range c.ParentHashes {
+			parentHashes = append(parentHashes, ph.String())
+		}
+
+		commits = append(commits, model.Commit{
+			Hash:         c.Hash.String(),
+			ShortHash:    c.Hash.String()[:8],
+			Message:      c.Message,
+			ParentHashes: parentHashes,
+			Author: model.Author{
+				Name:  c.Author.Name,
+				Email: c.Author.Email,
+				When:  c.Author.When,
+			},
+		})
+
+		return nil
+	})
+
+	return commits, nil
+}
+
 // TotalCommits returns the total number of commits
 func TotalCommits(repo *git.Repository) (int, error) {
 	ref, err := repo.Head()

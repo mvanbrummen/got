@@ -46,6 +46,7 @@ func main() {
 
 	r.HandleFunc("/repository/{repoName}/blob/{rest:.*}", handler.FileHandler)
 	r.HandleFunc("/repository/{repoName}", handler.RepositoryHandler)
+	r.HandleFunc("/repository/{repoName}/commits", handler.CommitsHandler)
 	r.HandleFunc("/", handler.IndexHandler)
 
 	log.Println("Starting server...")

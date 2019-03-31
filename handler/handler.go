@@ -6,6 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 
+	"github.com/mvanbrummen/got-std/gotgit"
 	git "github.com/mvanbrummen/got-std/gotgit"
 	"github.com/mvanbrummen/got-std/model"
 	"github.com/mvanbrummen/got-std/util"
@@ -72,4 +73,19 @@ func (h *Handler) RepositoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.templates["repository.html"].Execute(w, repoDetail)
+}
+
+func (h *Handler) CommitsHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	repo, _ := git.Open(vars["repoName"])
+
+	c, _ := gotgit.Commits(repo)
+
+	commits := model.Commits{
+		RepoName: vars["repoName"],
+		Commits:  c,
+	}
+
+	h.templates["commits.html"].Execute(w, commits)
 }
