@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 
+	"github.com/spf13/viper"
+
 	"github.com/mvanbrummen/got-std/handler"
 	"github.com/mvanbrummen/got-std/util"
 	log "github.com/sirupsen/logrus"
@@ -13,18 +15,26 @@ import (
 const (
 	templatesDir = "templates/"
 	staticDir    = "static/"
-	gotDir       = ".got"
 )
 
 var templates util.Templates
 
 func init() {
+	// init config
+	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
+	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
+	}
+
+	// init templates
 	var err error
 	if templates, err = util.InitTemplates(templatesDir); err != nil {
 		panic(err)
 	}
 
-	util.InitGotDir(gotDir)
+	// create the app directory
+	util.InitGotDir(viper.GetString("got.dir"))
 }
 
 func main() {
@@ -39,5 +49,5 @@ func main() {
 	r.HandleFunc("/", handler.IndexHandler)
 
 	log.Println("Starting server...")
-	log.Fatal(http.ListenAndServe(":8080", r))
+	log.Fatal(http.ListenAndServe(viper.GetString("application.port"), r))
 }
