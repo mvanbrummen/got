@@ -40,6 +40,13 @@
     <div class="row">
         <div class="column contents">
             <h3>Files</h3>
+            <div>
+                <form name="search" action="/repository/{{$repoName}}" method="POST">
+                    <input name="q"/>
+                    <button>Search</button>
+                </form>
+            </div>
+
             <table>
                 <thead>
                     <tr>

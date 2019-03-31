@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"net/http"
 	"text/template"
 
@@ -63,7 +64,21 @@ func (h *Handler) RepositoryHandler(w http.ResponseWriter, r *http.Request) {
 	repo, _ := git.Open(vars["repoName"])
 	totalCommits, _ := git.TotalCommits(repo)
 	totalBranches, _ := git.TotalBranches(repo)
-	files, _ := git.Files(repo)
+
+	var files []model.File
+	if r.Method == "POST" {
+		err := r.ParseForm()
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusBadRequest)
+		}
+		q := r.PostFormValue("q")
+
+		files, _ = git.FilesFilter(repo, q)
+	} else {
+		files, _ = git.Files(repo)
+	}
+
 	recentCommits, _ := git.RecentCommits(repo, 5)
 
 	repoDetail := model.RepositoryDetail{

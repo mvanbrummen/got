@@ -1,6 +1,8 @@
 package gotgit
 
 import (
+	"strings"
+
 	"github.com/mvanbrummen/got-std/model"
 
 	"gopkg.in/src-d/go-git.v4"
@@ -149,6 +151,34 @@ func Files(repo *git.Repository) ([]model.File, error) {
 	files := make([]model.File, 0)
 	iter.ForEach(func(f *object.File) error {
 		files = append(files, model.File{f.Name, f.Hash.String()})
+		return nil
+	})
+
+	return files, nil
+}
+
+// Files returns all the files of a repo that match the query
+func FilesFilter(repo *git.Repository, q string) ([]model.File, error) {
+	ref, err := repo.Head()
+	if err != nil {
+		return nil, err
+	}
+	c, err := repo.CommitObject(ref.Hash())
+	if err != nil {
+		return nil, err
+	}
+
+	iter, err := c.Files()
+	if err != nil {
+		return nil, err
+	}
+
+	files := make([]model.File, 0)
+	iter.ForEach(func(f *object.File) error {
+		if strings.Contains(f.Name, q) {
+			files = append(files, model.File{f.Name, f.Hash.String()})
+		}
+
 		return nil
 	})
 
