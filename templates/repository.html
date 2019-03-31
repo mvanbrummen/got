@@ -9,8 +9,21 @@
             padding: 0 10px 0 10px;
             background-color: ghostwhite;
         }
+
         table {
             background-color: whitesmoke;
+        }
+
+        .row {
+            display: flex;
+        }
+
+        .column {
+            flex: 50%;
+        }
+
+        .contents {
+            padding: 0 5px 0 5px;
         }
     </style>
 </head>
@@ -20,24 +33,53 @@
     <h2><a href="/">.got</a>/<a href="/">repositories</a>/<a href="/repository/{{$repoName}}">{{$repoName}}</a></h2>
 
 
-    <p>Commits <a href="/repository/{{$repoName}}/commits">{{.TotalCommits}}</a> | Branches <a href="#">{{.TotalBranches}}</a></p>
-    <table>
-        <thead>
-            <tr>
-                <th>File</td>
-                <th>Hash</td>
-            </tr>
-        </thead>
-        <tbody>
-            {{range $f := .Files}}
-            <tr>
-                <td><a href="{{$repoName}}/blob/{{$f.Name}}">{{$f.Name}}</a></td>
-                <td><a href="#">{{$f.Hash}}</a></td>
-            </tr>
-            {{end}}
+    <p>Commits <a href="/repository/{{$repoName}}/commits">{{.TotalCommits}}</a> | Branches <a
+            href="#">{{.TotalBranches}}</a></p>
 
-        </tbody>
-    </table>
+
+    <div class="row">
+        <div class="column contents">
+            <h3>Files</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>File</td>
+                        <th>Hash</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range $f := .Files}}
+                    <tr>
+                        <td><a href="{{$repoName}}/blob/{{$f.Name}}">{{$f.Name}}</a></td>
+                        <td><a href="#">{{$f.Hash}}</a></td>
+                    </tr>
+                    {{end}}
+
+                </tbody>
+            </table>
+        </div>
+        <div class="column contents">
+            <h3>Recent Commits</h3>
+            <table>
+                <tbody>
+                    {{range .RecentCommits}}
+                    <tr>
+                        <td>
+                            <p><a href="/repository/{{$repoName }}/commits/{{.Hash}}">{{.ShortHash}}</a></p>
+                        </td>
+                        <td>
+                            <p>{{.Message}}</p>
+                            <p><a href="#">{{.Author.Name}}</a> commited at {{.Author.When}}</p>
+                        </td>
+                    </tr>
+                    {{end}}
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
 
 </body>
 

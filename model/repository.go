@@ -13,4 +13,5 @@ type RepositoryDetail struct {
 	Files         []File
 	TotalCommits  int
 	TotalBranches int
+	RecentCommits []Commit
 }

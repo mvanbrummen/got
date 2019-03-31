@@ -64,12 +64,14 @@ func (h *Handler) RepositoryHandler(w http.ResponseWriter, r *http.Request) {
 	totalCommits, _ := git.TotalCommits(repo)
 	totalBranches, _ := git.TotalBranches(repo)
 	files, _ := git.Files(repo)
+	recentCommits, _ := git.RecentCommits(repo, 5)
 
 	repoDetail := model.RepositoryDetail{
 		Name:          vars["repoName"],
 		TotalCommits:  totalCommits,
 		TotalBranches: totalBranches,
 		Files:         files,
+		RecentCommits: recentCommits,
 	}
 
 	h.templates["repository.html"].Execute(w, repoDetail)
