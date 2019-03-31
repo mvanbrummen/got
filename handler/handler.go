@@ -5,10 +5,8 @@ import (
 	"text/template"
 
 	"github.com/gorilla/mux"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
 
+	git "github.com/mvanbrummen/got-std/gotgit"
 	"github.com/mvanbrummen/got-std/model"
 )
 
@@ -27,21 +25,8 @@ func (h *Handler) FileHandler(w http.ResponseWriter, r *http.Request) {
 	repoName := vars["repoName"]
 	fileName := vars["rest"]
 
-	repo, _ := git.PlainOpen(".got/" + repoName + "/.git")
-	ref, _ := repo.Head()
-
-	c, _ := repo.CommitObject(ref.Hash())
-
-	iter, _ := c.Files()
-
-	var contents string
-	iter.ForEach(func(f *object.File) error {
-		if f.Name == fileName {
-			cont, _ := f.Contents()
-			contents = cont
-		}
-		return nil
-	})
+	repo, _ := git.Open(repoName)
+	contents, _ := git.FileContents(repo, fileName)
 
 	fileDetail := model.FileDetail{
 		RepoName: repoName,
@@ -70,39 +55,14 @@ func (h *Handler) IndexHandler(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) RepositoryHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 
-	repo, _ := git.PlainOpen(".got/" + vars["repoName"] + "/.git")
-	ref, _ := repo.Head()
-
-	bIter, _ := repo.Branches()
-
-	totalBranches := 0
-	bIter.ForEach(func(p *plumbing.Reference) error {
-		totalBranches++
-		return nil
-	})
-
-	c, _ := repo.CommitObject(ref.Hash())
-
-	iter, _ := c.Files()
-
-	files := make([]model.File, 0)
-	iter.ForEach(func(f *object.File) error {
-		files = append(files, model.File{f.Name, f.Hash.String()})
-		return nil
-	})
-
-	cIter, _ := repo.Log(&git.LogOptions{From: ref.Hash()})
-
-	var cCount int
-	cIter.ForEach(func(c *object.Commit) error {
-		cCount++
-
-		return nil
-	})
+	repo, _ := git.Open(vars["repoName"])
+	totalCommits, _ := git.TotalCommits(repo)
+	totalBranches, _ := git.TotalBranches(repo)
+	files, _ := git.Files(repo)
 
 	repoDetail := model.RepositoryDetail{
 		Name:          vars["repoName"],
-		TotalCommits:  cCount,
+		TotalCommits:  totalCommits,
 		TotalBranches: totalBranches,
 		Files:         files,
 	}
