@@ -7,13 +7,17 @@
     <style>
         body {
             padding: 0 10px 0 10px;
+            background-color: ghostwhite;
+        }
+        table {
+            background-color: whitesmoke;
         }
     </style>
 </head>
 
 <body>
     {{$repoName := .Name }}
-    <h2>{{$repoName}}</h2>
+    <h2><a href="/repository/{{$repoName}}">{{$repoName}}</a></h2>
 
 
     <p>Commits <a href="#">{{.TotalCommits}}</a> | Branches <a href="#">{{.TotalBranches}}</a></p>
