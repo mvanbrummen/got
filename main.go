@@ -5,11 +5,8 @@ import (
 	"net/http"
 	"text/template"
 
-	"gopkg.in/src-d/go-git.v4/plumbing"
-
+	"github.com/mvanbrummen/got-std/handler"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/src-d/go-git.v4"
-	"gopkg.in/src-d/go-git.v4/plumbing/object"
 
 	"github.com/gorilla/mux"
 )
@@ -18,121 +15,6 @@ const (
 	templatesDir = "templates/"
 	staticDir    = "static/"
 )
-
-type RepositoryList struct {
-	Repositories []Repository
-}
-
-type Repository struct {
-	Name string
-}
-
-type RepositoryDetail struct {
-	Name          string
-	Files         []File
-	TotalCommits  int
-	TotalBranches int
-}
-
-type File struct {
-	Name string
-	Hash string
-}
-
-type FileDetail struct {
-	RepoName string
-	Name     string
-	Contents string
-	Hash     string
-}
-
-func repositoryHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
-	repo, _ := git.PlainOpen(".got/" + vars["repoName"] + "/.git")
-	ref, _ := repo.Head()
-
-	bIter, _ := repo.Branches()
-
-	totalBranches := 0
-	bIter.ForEach(func(p *plumbing.Reference) error {
-		totalBranches++
-		return nil
-	})
-
-	c, _ := repo.CommitObject(ref.Hash())
-
-	iter, _ := c.Files()
-
-	files := make([]File, 0)
-	iter.ForEach(func(f *object.File) error {
-		files = append(files, File{f.Name, f.Hash.String()})
-		return nil
-	})
-
-	cIter, _ := repo.Log(&git.LogOptions{From: ref.Hash()})
-
-	var cCount int
-	cIter.ForEach(func(c *object.Commit) error {
-		cCount++
-
-		return nil
-	})
-
-	repoDetail := RepositoryDetail{
-		Name:          vars["repoName"],
-		TotalCommits:  cCount,
-		TotalBranches: totalBranches,
-		Files:         files,
-	}
-
-	templates["repository.html"].Execute(w, repoDetail)
-}
-
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-	repos := RepositoryList{
-		[]Repository{
-			Repository{
-				"go-bencoder2",
-			},
-			Repository{
-				"go-git",
-			},
-		},
-	}
-
-	templates["index.html"].Execute(w, repos)
-}
-
-func fileHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	repoName := vars["repoName"]
-	fileName := vars["rest"]
-
-	repo, _ := git.PlainOpen(".got/" + repoName + "/.git")
-	ref, _ := repo.Head()
-
-	c, _ := repo.CommitObject(ref.Hash())
-
-	iter, _ := c.Files()
-
-	var contents string
-	iter.ForEach(func(f *object.File) error {
-		if f.Name == fileName {
-			cont, _ := f.Contents()
-			contents = cont
-		}
-		return nil
-	})
-
-	fileDetail := FileDetail{
-		RepoName: repoName,
-		Name:     fileName,
-		Contents: contents,
-	}
-
-	templates["file.html"].Execute(w, fileDetail)
-}
 
 var templates map[string]*template.Template
 
@@ -150,14 +32,16 @@ func init() {
 }
 
 func main() {
-	handler := mux.NewRouter()
+	r := mux.NewRouter()
 
-	handler.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
+	handler := handler.NewHandler(templates)
 
-	handler.HandleFunc("/repository/{repoName}/blob/{rest:.*}", fileHandler)
-	handler.HandleFunc("/repository/{repoName}", repositoryHandler)
-	handler.HandleFunc("/", indexHandler)
+	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
+
+	r.HandleFunc("/repository/{repoName}/blob/{rest:.*}", handler.FileHandler)
+	r.HandleFunc("/repository/{repoName}", handler.RepositoryHandler)
+	r.HandleFunc("/", handler.IndexHandler)
 
 	log.Println("Starting server...")
-	log.Fatal(http.ListenAndServe(":8080", handler))
+	log.Fatal(http.ListenAndServe(":8080", r))
 }
