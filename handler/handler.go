@@ -8,10 +8,11 @@ import (
 
 	git "github.com/mvanbrummen/got-std/gotgit"
 	"github.com/mvanbrummen/got-std/model"
+	"github.com/mvanbrummen/got-std/util"
 )
 
 type Handler struct {
-	templates map[string]*template.Template
+	templates util.Templates
 }
 
 func NewHandler(templates map[string]*template.Template) *Handler {
@@ -45,6 +46,9 @@ func (h *Handler) IndexHandler(w http.ResponseWriter, r *http.Request) {
 			},
 			model.Repository{
 				"go-git",
+			},
+			model.Repository{
+				"vscode",
 			},
 		},
 	}

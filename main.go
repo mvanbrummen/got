@@ -1,11 +1,10 @@
 package main
 
 import (
-	"io/ioutil"
 	"net/http"
-	"text/template"
 
 	"github.com/mvanbrummen/got-std/handler"
+	"github.com/mvanbrummen/got-std/util"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/gorilla/mux"
@@ -14,21 +13,18 @@ import (
 const (
 	templatesDir = "templates/"
 	staticDir    = "static/"
+	gotDir       = ".got"
 )
 
-var templates map[string]*template.Template
+var templates util.Templates
 
 func init() {
-	files, err := ioutil.ReadDir(templatesDir)
-	if err != nil {
+	var err error
+	if templates, err = util.InitTemplates(templatesDir); err != nil {
 		panic(err)
 	}
 
-	templates = make(map[string]*template.Template, 0)
-
-	for _, f := range files {
-		templates[f.Name()] = template.Must(template.ParseFiles(templatesDir + f.Name()))
-	}
+	util.InitGotDir(gotDir)
 }
 
 func main() {
