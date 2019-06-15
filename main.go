@@ -1,23 +1,13 @@
 package main
 
 import (
-	"net/http"
+	"github.com/gin-gonic/gin"
 
 	"github.com/spf13/viper"
 
 	"github.com/mvanbrummen/got-std/handler"
 	"github.com/mvanbrummen/got-std/util"
-	log "github.com/sirupsen/logrus"
-
-	"github.com/gorilla/mux"
 )
-
-const (
-	templatesDir = "templates/"
-	staticDir    = "static/"
-)
-
-var templates util.Templates
 
 func init() {
 	// init config
@@ -27,28 +17,22 @@ func init() {
 		panic(err)
 	}
 
-	// init templates
-	var err error
-	if templates, err = util.InitTemplates(templatesDir); err != nil {
-		panic(err)
-	}
-
 	// create the app directory
 	util.InitGotDir(viper.GetString("got.dir"))
 }
 
 func main() {
-	r := mux.NewRouter()
+	r := gin.Default()
+	r.LoadHTMLGlob("templates/*")
 
-	handler := handler.NewHandler(templates)
+	handler := &handler.Handler{}
 
-	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir(staticDir))))
+	r.Static("/static", "./static")
+	r.GET("/repository/:repoName", handler.RepositoryHandler)
+	r.GET("/repository/:repoName/blob/*rest", handler.FileHandler)
+	r.POST("/repository/:repoName", handler.RepositoryHandlerPost)
+	r.GET("/repository/:repoName/commits", handler.CommitsHandler)
+	r.GET("/", handler.IndexHandler)
 
-	r.HandleFunc("/repository/{repoName}/blob/{rest:.*}", handler.FileHandler)
-	r.HandleFunc("/repository/{repoName}", handler.RepositoryHandler)
-	r.HandleFunc("/repository/{repoName}/commits", handler.CommitsHandler)
-	r.HandleFunc("/", handler.IndexHandler)
-
-	log.Println("Starting server...")
-	log.Fatal(http.ListenAndServe(viper.GetString("application.port"), r))
+	r.Run(viper.GetString("application.port"))
 }

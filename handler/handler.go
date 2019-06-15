@@ -1,32 +1,23 @@
 package handler
 
 import (
-	"log"
 	"net/http"
-	"text/template"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 
 	"github.com/mvanbrummen/got-std/gotgit"
 	git "github.com/mvanbrummen/got-std/gotgit"
 	"github.com/mvanbrummen/got-std/model"
-	"github.com/mvanbrummen/got-std/util"
 )
 
-type Handler struct {
-	templates util.Templates
-}
+type Handler struct{}
 
-func NewHandler(templates map[string]*template.Template) *Handler {
-	return &Handler{
-		templates: templates,
-	}
-}
+func (h *Handler) FileHandler(c *gin.Context) {
+	repoName := c.Param("repoName")
+	fileName := c.Param("rest")
 
-func (h *Handler) FileHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	repoName := vars["repoName"]
-	fileName := vars["rest"]
+	// strip the leading /
+	fileName = fileName[1:]
 
 	repo, _ := git.Open(repoName)
 	contents, _ := git.FileContents(repo, fileName)
@@ -37,10 +28,10 @@ func (h *Handler) FileHandler(w http.ResponseWriter, r *http.Request) {
 		Contents: contents,
 	}
 
-	h.templates["file.html"].Execute(w, fileDetail)
+	c.HTML(http.StatusOK, "file.html", fileDetail)
 }
 
-func (h *Handler) IndexHandler(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) IndexHandler(c *gin.Context) {
 	repos := model.RepositoryList{
 		[]model.Repository{
 			model.Repository{
@@ -55,54 +46,61 @@ func (h *Handler) IndexHandler(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 
-	h.templates["index.html"].Execute(w, repos)
+	c.HTML(http.StatusOK, "index.html", repos)
 }
 
-func (h *Handler) RepositoryHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-
-	repo, _ := git.Open(vars["repoName"])
+func (h *Handler) RepositoryHandler(c *gin.Context) {
+	repo, _ := git.Open(c.Param("repoName"))
 	totalCommits, _ := git.TotalCommits(repo)
 	totalBranches, _ := git.TotalBranches(repo)
 
-	var files []model.File
-	if r.Method == "POST" {
-		err := r.ParseForm()
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusBadRequest)
-		}
-		q := r.PostFormValue("q")
-
-		files, _ = git.FilesFilter(repo, q)
-	} else {
-		files, _ = git.Files(repo)
-	}
+	files, _ := git.Files(repo)
 
 	recentCommits, _ := git.RecentCommits(repo, 5)
 
 	repoDetail := model.RepositoryDetail{
-		Name:          vars["repoName"],
+		Name:          c.Param("repoName"),
 		TotalCommits:  totalCommits,
 		TotalBranches: totalBranches,
 		Files:         files,
 		RecentCommits: recentCommits,
 	}
 
-	h.templates["repository.html"].Execute(w, repoDetail)
+	c.HTML(http.StatusOK, "repository.html", repoDetail)
 }
 
-func (h *Handler) CommitsHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
+func (h *Handler) RepositoryHandlerPost(c *gin.Context) {
+	repo, _ := git.Open(c.Param("repoName"))
+	totalCommits, _ := git.TotalCommits(repo)
+	totalBranches, _ := git.TotalBranches(repo)
 
-	repo, _ := git.Open(vars["repoName"])
+	q := c.PostForm("q")
 
-	c, _ := gotgit.Commits(repo)
+	files, _ := git.FilesFilter(repo, q)
 
-	commits := model.Commits{
-		RepoName: vars["repoName"],
-		Commits:  c,
+	recentCommits, _ := git.RecentCommits(repo, 5)
+
+	repoDetail := model.RepositoryDetail{
+		Name:          c.Param("repoName"),
+		TotalCommits:  totalCommits,
+		TotalBranches: totalBranches,
+		Files:         files,
+		RecentCommits: recentCommits,
 	}
 
-	h.templates["commits.html"].Execute(w, commits)
+	c.HTML(http.StatusOK, "repository.html", repoDetail)
+}
+
+func (h *Handler) CommitsHandler(c *gin.Context) {
+	repoName := c.Param("repoName")
+	repo, _ := git.Open(repoName)
+
+	cc, _ := gotgit.Commits(repo)
+
+	commits := model.Commits{
+		RepoName: repoName,
+		Commits:  cc,
+	}
+
+	c.HTML(http.StatusOK, "commits.html", commits)
 }
